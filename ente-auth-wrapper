@@ -15,7 +15,7 @@ MAX_HEIGHT=1000.0
 
 # Default window height to set if the current height exceeds the maximum (as a
 # floating-point number)
-DEFAULT_HEIGHT=900.0
+DEFAULT_HEIGHT=950.0
 
 # Ensure the configuration file exists
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -32,47 +32,7 @@ if [ "$(echo "$CURRENT_HEIGHT > $MAX_HEIGHT" | bc -l)" -eq 1 ]; then
     sed -i 's/\("flutter.windowHeight":\s*\)[0-9]\+\(\.[0-9]\+\)\?/\1'"$DEFAULT_HEIGHT"'/' "$CONFIG_FILE"
 fi
 
-# Create a link to the database where Ente authentication expects to find it
-DATABASE_FILE="$HOME/.local/share/io.ente.auth/.ente.authenticator.db"
-DATABASE_DIR="$HOME/Documents/ente"
-DATABASE_LINK="$DATABASE_DIR/.ente.authenticator.db"
-
-if [ -L "$DATABASE_LINK" ]; then
-    if [ ! "$(readlink -- "$DATABASE_LINK")" = "$DATABASE_FILE" ]; then
-        log "Link to database exists but is invalid. Aborting..."
-        exit 1
-    fi
-else
-    if [ -d "$DATABASE_DIR" ]; then
-        if [ ! -z "$(ls -A "$DATABASE_DIR")" ]; then
-            log "Database directory is not empty. Aborting..."
-            exit 1
-        fi
-    else
-        mkdir -p "$DATABASE_DIR"
-    fi
-    ln -s "$DATABASE_FILE" "$DATABASE_LINK"
-fi
-
 # Run Ente authentication
-ente_auth
-
-# Remove the link to the database
-if [ -L "$DATABASE_LINK" ]; then
-    rm "$DATABASE_LINK"
-else
-    log "Could not remove link to database. Aborting..."
-    exit 1
-fi
-
-# Remove the database directory if it is empty
-if [ -d "$DATABASE_DIR" ]; then
-    if [ -z "$(ls -A "$DATABASE_DIR")" ]; then
-        rmdir "$DATABASE_DIR"
-    else
-        log "Database directory is not empty. Aborting..."
-        exit 1
-    fi
-fi
+enteauth
 
 exit 0
